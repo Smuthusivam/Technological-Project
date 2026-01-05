@@ -50,8 +50,10 @@ def dfs(adj,start,V):
     while True:
         neigbours=adj[curr]
         for val in neigbours:
+            # Detecting back edge
             if prec[val]!=0 and prec[curr]!=val and nr[curr] > nr[val]:
                  print(f"back edge: ({val},{curr})")
+            
             if prec[val]==0:
                 prec[val]=curr
                 nr[val]=i+1
@@ -65,6 +67,19 @@ def dfs(adj,start,V):
                 curr=prec[curr]
     return prec
 
+def compare(tree_All):
+    G=[]
+    for i in range(len(tree_All)):
+        val=[]
+        val.append(i+1)
+        for j in range(len(tree_All)):
+            if i!=j:
+                if tree_All[i]==tree_All[j]:
+                    val.append(j+1)
+        val.sort()
+        if val not in G and len(val)>1:
+            G.append(val)
+    return G
 
 #Main Method
 if __name__ == "__main__":
