@@ -44,11 +44,18 @@ def dfs(adj,start,V):
     prec=[0]*(V+1)
     prec[start]=start
     curr=start
+    nr=[0]*(V+1)
+    nr[start]=1
+    i=0
     while True:
         neigbours=adj[curr]
         for val in neigbours:
+            if prec[val]!=0 and prec[curr]!=val and nr[curr] > nr[val]:
+                 print(f"back edge: ({val},{curr})")
             if prec[val]==0:
                 prec[val]=curr
+                nr[val]=i+1
+                i=nr[val]
                 curr=val
                 break
         else:   
