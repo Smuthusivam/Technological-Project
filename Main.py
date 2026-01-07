@@ -45,7 +45,6 @@ def adjacet_matrix(edges,V):
 
 # DFS algorithm Function 
 def dfs(adj,start,V,v_count,prec):
-    #prec=[0]*(V+1)
     prec[start]=start
     curr=start
     v_count+=1
@@ -69,7 +68,7 @@ def first(prec):
        if prec[i]==0:
         return i
 
-
+#Method to print the edges of each connected component tree edges
 def connect_comp_tree(V,adj):
     count=1
     vis=[]
@@ -115,7 +114,7 @@ if __name__ == "__main__":
     for i in range(1,len(adj)):
         print(f"{i}:{adj[i]}")
 
-
+    #Method to print the edges of each connected component edges
     ls = []
     count = 1
     prec = [0]*(V+1)
@@ -134,3 +133,6 @@ if __name__ == "__main__":
     for i in range(len(ls)):
         adj_tre=adjacet_matrix(ls[i],V)
         print(f"Tree-{i+1}={adj_tre}")
+
+    
+   
