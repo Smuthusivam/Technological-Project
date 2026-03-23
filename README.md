@@ -190,7 +190,7 @@ The script will:
 3. Perform DFS from vertex `1`.
 4. Check connectivity and display the result in the terminal.
 5. Save `Original Graph.png` — a visualization of the input graph.
-6. If the graph is connected, save ` Tree from vertex (1).png` — a visualization of the DFS spanning tree.
+6. If the graph is connected, save `⎵Tree from vertex (1).png` — a visualization of the DFS spanning tree (the filename starts with a space due to the leading space in the title string in `Main.py`).
 
 ---
 
@@ -226,7 +226,7 @@ Graph is disconnected
 | File | Contents |
 |------|---------|
 | `Original Graph.png` | Spring-layout visualization of all input edges |
-| ` Tree from vertex (1).png` | Spring-layout visualization of the DFS spanning tree (only generated when the graph is connected) |
+| `&nbsp;Tree from vertex (1).png` | Spring-layout visualization of the DFS spanning tree (only generated when the graph is connected). Note: the filename begins with a space character because the title string in `Main.py` contains a leading space. |
 
 Node labels are drawn inside light-blue circles; edges are rendered in gray.
 
@@ -291,4 +291,4 @@ For this particular input the spanning tree equals the original graph because th
 | Only undirected graphs are supported | Extend to directed graphs (digraphs) |
 | Graph must be described in a plain-text file | Add support for interactive input or standard input (`stdin`) |
 | Only one connected-component is analyzed | For disconnected graphs, enumerate and visualize each component separately |
-| Minor typo in `adjacet_matrix` function name | Rename to `adjacency_list` in a future refactor |
+| Minor typo in `adjacet_matrix` function name (`adjacet` instead of `adjacency`) | Rename to `adjacency_list` in a future refactor |
