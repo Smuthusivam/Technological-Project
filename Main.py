@@ -6,7 +6,7 @@ import glob
 def tree_edges(prec,V):
     tree=[]
     for i in range(1,V+1):
-        if prec[i] !=0 and prec[i] !=i:
+        if prec[i] !=i:
             lst=[prec[i],i]
             lst.sort()
             tree.append(lst)
@@ -40,9 +40,8 @@ def adjacet_matrix(edges,V):
     return adj
 
 # DFS algorithm Function 
-def dfs(adj,start,V,prec=None):
-    if prec is None:
-        prec=[0]*(V+1)
+def dfs(adj,start,V):
+    prec=[0]*(V+1)
     prec[start]=start
     curr=start
     while True:
@@ -60,15 +59,6 @@ def dfs(adj,start,V,prec=None):
     return prec
 
 
-#Build a spanning forest: run DFS from start, then from each remaining unvisited vertex
-def spanning_forest(adj,start,V):
-    prec=dfs(adj,start,V)
-    for v in range(1,V+1):
-        if prec[v]==0:
-            dfs(adj,v,V,prec)
-    return prec
-
-
 #Main Method
 if __name__ == "__main__":
 
@@ -78,39 +68,26 @@ if __name__ == "__main__":
     edges,V=text_inp()
     dp.plot_graph(edges,"Original Graph")
 
-    print(f"The edges are {edges}")
-    print(f"Number of vertices: {V}")
+    print(f"The edges are{edges}")
+    print(f"Number of vertices:{V}")
 
     adj=adjacet_matrix(edges,V)
 
     for i in range(1,len(adj)):
-        print(f"{i}: {adj[i]}")
+        print(f"{i}:{adj[i]}")
 
-    # Ask user which vertex to start DFS from
-    start=int(input(f"Enter starting vertex (1 to {V}): "))
-    while start < 1 or start > V:
-        print(f"Invalid vertex. Please enter a number between 1 and {V}.")
-        start=int(input(f"Enter starting vertex (1 to {V}): "))
 
+    start=1
     prec=dfs(adj,start,V)
-    print(f"Prec: {prec[1:]}")
+    print(f"Prec:{prec[1:]}")
 
     if 0 in prec[1:]:
         print("Graph is disconnected")
-        print("Finding spanning trees for each connected component...")
-        prec_forest=spanning_forest(adj,start,V)
-        # Component roots are vertices where prec[v] == v
-        roots=[v for v in range(1,V+1) if prec_forest[v]==v]
-        print(f"Number of connected components: {len(roots)}")
-        for root in roots:
-            comp_prec=dfs(adj,root,V)
-            comp_tree=tree_edges(comp_prec,V)
-            print(f"Spanning tree of component starting at vertex {root}: {comp_tree}")
-            if comp_tree:
-                dp.plot_graph(comp_tree,f"Tree from vertex ({root})")
     else:
         tree=tree_edges(prec,V)
         print("The graph is connected.")
         print(f"Tree Edges from vertex - {start}: \n {tree}")
-        dp.plot_graph(tree,f"Tree from vertex ({start})")
+        dp.plot_graph(tree, f" Tree from vertex ({start})")
+    
 
+   

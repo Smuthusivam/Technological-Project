@@ -1,6 +1,6 @@
 # Graph Connectivity and DFS Spanning Tree Analyzer
 
-A Python application that determines whether an undirected graph is **connected** and generates a **Depth-First Search (DFS) spanning tree** from any chosen starting vertex. For disconnected graphs it automatically identifies every connected component and visualizes a spanning tree for each one.
+A Python application that determines whether an undirected graph is **connected** and, if so, generates and visualizes a **Depth-First Search (DFS) spanning tree** starting from vertex 1.
 
 ---
 
@@ -12,16 +12,15 @@ A Python application that determines whether an undirected graph is **connected*
   - [Depth-First Search (DFS)](#depth-first-search-dfs)
   - [Connectivity Check](#connectivity-check)
   - [Spanning Tree Construction](#spanning-tree-construction)
-  - [Spanning Forest for Disconnected Graphs](#spanning-forest-for-disconnected-graphs)
+  - [How the Starting Vertex Affects the Tree](#how-the-starting-vertex-affects-the-tree)
+  - [Spanning Forests in Disconnected Graphs](#spanning-forests-in-disconnected-graphs)
 - [Project Structure](#project-structure)
 - [Dependencies](#dependencies)
 - [Installation](#installation)
 - [Input Format](#input-format)
 - [Usage](#usage)
 - [Output](#output)
-- [Example Walkthroughs](#example-walkthroughs)
-  - [Connected Graph](#connected-graph)
-  - [Disconnected Graph](#disconnected-graph)
+- [Example Walkthrough](#example-walkthrough)
 - [Limitations and Future Work](#limitations-and-future-work)
 
 ---
@@ -32,22 +31,22 @@ In graph theory, several fundamental questions arise when analyzing a network:
 
 1. **Is the graph connected?** — Can every vertex be reached from every other vertex by following edges?
 2. **What is the spanning tree?** — What is the minimal set of edges that keeps all vertices reachable from a starting point (i.e., a tree that spans every vertex)?
-3. **Does the spanning tree change with the starting vertex?** — Yes. Different starting vertices explore neighbors in different orders, producing different DFS trees even on the same graph.
-4. **What about disconnected graphs?** — A spanning tree cannot cross the gap between disconnected components. Instead, a **spanning forest** is built — one spanning tree per connected component.
+3. **Does the spanning tree change with the starting vertex?** — Yes. Different starting vertices explore neighbors in different orders, producing structurally different DFS trees even on the same graph.
+4. **What about disconnected graphs?** — A single spanning tree cannot cross the gap between disconnected components. In that case a **spanning forest** is needed — one spanning tree per connected component.
 
 These questions appear throughout computer science and engineering:
 - Network routing (e.g., ensuring all computers in a network can communicate)
 - Circuit analysis (e.g., finding minimal wiring paths)
 - Social network analysis (e.g., determining whether a group is fully connected)
 
-This project addresses all four questions by:
+This project demonstrates questions 1 and 2 by:
 - Accepting a simple edge-list description of an undirected graph from a text file
-- Asking the user which vertex to start DFS from (any vertex is valid)
-- Performing an **iterative DFS traversal** from that vertex
+- Performing an **iterative DFS traversal** from vertex `1`
 - Reporting whether the graph is **connected** or **disconnected**
-- If connected: extracting and visualizing the **DFS spanning tree** from the chosen vertex
-- If disconnected: computing a **spanning forest** — finding and visualizing a spanning tree for **each** connected component
-- Saving PNG visualizations of the original graph and all spanning trees
+- If connected, extracting and visualizing the **DFS spanning tree**
+- Saving PNG visualizations of both the original graph and the spanning tree
+
+Questions 3 and 4 are explained conceptually in the sections below and are noted as planned enhancements.
 
 ---
 
@@ -74,14 +73,12 @@ The DFS implementation is **iterative** (not recursive), which avoids Python's r
 **Algorithm steps:**
 
 1. Initialize `prec[start] = start` and set the current vertex `curr = start`.
-2. Look at the neighbors of `curr`.  
+2. Look at the neighbors of `curr`.
    - If an unvisited neighbor `val` is found (`prec[val] == 0`), set `prec[val] = curr`, move to `val`, and restart the neighbor scan.
    - If no unvisited neighbor exists, **backtrack**: set `curr = prec[curr]`.
 3. Terminate when `curr` returns to `start` with no unvisited neighbors remaining.
 
 **Time complexity:** O(V + E) — each vertex and edge is processed at most once.
-
-The function accepts an optional shared `prec` array so it can be called incrementally when building a spanning forest.
 
 ### Connectivity Check
 
@@ -92,20 +89,42 @@ After DFS completes, the `prec` array is inspected:
 ### Spanning Tree Construction
 
 The spanning tree edges are derived directly from the `prec` array:
-- For every vertex `v` where `prec[v] ≠ v` **and** `prec[v] ≠ 0`, the edge `(prec[v], v)` is a tree edge.
+- For every vertex `v` where `prec[v] ≠ v` (i.e., `v` is not the start vertex), the edge `(prec[v], v)` is a tree edge.
 - These edges form a tree that connects all vertices using exactly `V − 1` edges.
 
-### Spanning Forest for Disconnected Graphs
+### How the Starting Vertex Affects the Tree
 
-When the graph is disconnected, a single DFS cannot reach all vertices. The `spanning_forest` function extends DFS to cover every component:
+The DFS spanning tree is **not unique** — it depends on which vertex is chosen as the root. Different starting vertices cause the DFS to explore the graph in a different order, resulting in a different parent assignment in the `prec` array and therefore a different set of tree edges.
 
-1. Run DFS from the user-chosen starting vertex `start`, filling `prec` for all reachable vertices.
-2. Scan vertices 1 to V; for each vertex `v` still unvisited (`prec[v] == 0`), run DFS from `v` using the **same shared `prec` array**.
-3. Repeat until all vertices are assigned a parent.
+**Example** — the same graph `{(1,2), (1,3), (2,4)}` explored from two different roots:
 
-After this, every vertex `v` where `prec[v] == v` is the **root** of one connected component. A fresh single-component DFS from each root then provides its individual spanning tree for display.
+| Start vertex | `prec` array | Tree edges |
+|:---:|---|---|
+| **1** | `[1, 1, 1, 2]` | `(1,2), (1,3), (2,4)` — vertex 1 is the root |
+| **3** | `[3, 1, 3, 2]` | `(3,1), (1,2), (2,4)` — vertex 3 is the root; the same physical edges, but the tree is rooted differently |
 
-**Observation:** changing the starting vertex affects which component is explored first and which vertex acts as root in its component's spanning tree — two runs with different starting vertices may produce visually different forests.
+Currently the program always starts from vertex `1`. Allowing the user to choose the starting vertex is listed under [Limitations and Future Work](#limitations-and-future-work).
+
+### Spanning Forests in Disconnected Graphs
+
+When a graph is disconnected, vertices in different components are unreachable from each other. A single DFS from one vertex can only span its own component, leaving others unvisited (`prec[v] == 0`).
+
+The solution is a **spanning forest**: run DFS independently from one unvisited vertex in each component, producing one spanning tree per component. Together these trees form a forest that covers every vertex.
+
+**Example** — disconnected graph `{(1,2), (1,3), (4,5)}`:
+
+```
+    1       4
+   / \      |
+  2   3     5
+```
+
+| Component | DFS start | Spanning tree edges |
+|---|:---:|---|
+| {1, 2, 3} | 1 | `(1,2), (1,3)` |
+| {4, 5}    | 4 | `(4,5)` |
+
+Currently the program reports "Graph is disconnected" when it detects unvisited vertices but does not yet enumerate per-component trees. This is listed under [Limitations and Future Work](#limitations-and-future-work).
 
 ---
 
@@ -113,7 +132,7 @@ After this, every vertex `v` where `prec[v] == v` is the **root** of one connect
 
 ```
 Technological-Project/
-├── Main.py       # Core logic: DFS, spanning forest, connectivity check, spanning tree extraction
+├── Main.py       # Core logic: DFS, connectivity check, spanning tree extraction
 ├── Display.py    # Graph visualization using NetworkX and Matplotlib
 ├── data.txt      # Input file containing graph edges (one edge per line)
 └── README.md     # Project documentation
@@ -121,7 +140,7 @@ Technological-Project/
 
 | File | Responsibility |
 |------|----------------|
-| `Main.py` | Reads input, builds adjacency list, prompts for start vertex, runs DFS / spanning forest, checks connectivity, extracts spanning trees, coordinates visualization |
+| `Main.py` | Reads input, builds adjacency list, runs DFS from vertex 1, checks connectivity, extracts spanning tree, coordinates visualization |
 | `Display.py` | Renders any edge list as a labeled graph image and saves it as a PNG file |
 | `data.txt` | User-supplied graph description in edge-list format |
 
@@ -177,7 +196,7 @@ Edit `data.txt` to describe your graph. Each line represents one **undirected ed
 - Duplicate edges and self-loops are not explicitly filtered; avoid them for correct results.
 - The file must contain at least one edge.
 
-**Example — connected graph (`data.txt`):**
+**Example `data.txt`:**
 
 ```
 1 2
@@ -185,26 +204,14 @@ Edit `data.txt` to describe your graph. Each line represents one **undirected ed
 2 4
 ```
 
+This describes the graph:
+
 ```
     1
    / \
   2   3
   |
   4
-```
-
-**Example — disconnected graph (`data.txt`):**
-
-```
-1 2
-1 3
-4 5
-```
-
-```
-    1       4
-   / \      |
-  2   3     5
 ```
 
 ---
@@ -219,56 +226,45 @@ python Main.py
 
 The script will:
 1. Delete any previously generated `*.png` files in the current directory.
-2. Read edges from `data.txt` and print the edge list, vertex count, and adjacency list.
-3. **Prompt you to enter a starting vertex** (any integer from 1 to V).
-4. Run DFS from that vertex and check connectivity.
+2. Read edges from `data.txt` and display the edge list, vertex count, and adjacency list in the terminal.
+3. Perform DFS from vertex `1`.
+4. Check connectivity and print the result.
 5. Save `Original Graph.png` — a visualization of the input graph.
-6. **If connected:** print the spanning tree edges and save `Tree from vertex (N).png`.
-7. **If disconnected:** identify all components, print and save a spanning tree PNG for each one.
+6. If the graph is **connected**, save ` Tree from vertex (1).png` — a visualization of the DFS spanning tree.
+7. If the graph is **disconnected**, print `"Graph is disconnected"` (no tree PNG is produced).
+
+> **Note:** the spanning tree PNG filename begins with a space character because the title string passed to `plot_graph` in `Main.py` is `" Tree from vertex (1)"`.
 
 ---
 
 ## Output
 
-### Terminal output — connected graph (start vertex 1)
+### Terminal output — connected graph
 
 ```
-The edges are [[1, 2], [1, 3], [2, 4]]
-Number of vertices: 4
-1: [2, 3]
-2: [1, 4]
-3: [1]
-4: [2]
-Enter starting vertex (1 to 4): 1
-Prec: [1, 1, 1, 2]
+The edges are[[1, 2], [1, 3], [2, 4]]
+Number of vertices:4
+1:[2, 3]
+2:[1, 4]
+3:[1]
+4:[2]
+Prec:[1, 1, 1, 2]
 The graph is connected.
 Tree Edges from vertex - 1:
  [[1, 2], [1, 3], [2, 4]]
 ```
 
-### Terminal output — connected graph (start vertex 3, different tree shape)
+### Terminal output — disconnected graph
 
 ```
-Enter starting vertex (1 to 4): 3
-Prec: [3, 1, 3, 2]
-The graph is connected.
-Tree Edges from vertex - 3:
- [[1, 2], [1, 3], [2, 4]]
-```
-
-### Terminal output — disconnected graph (start vertex 1)
-
-```
-The edges are [[1, 2], [1, 3], [4, 5]]
-Number of vertices: 5
-...
-Enter starting vertex (1 to 5): 1
-Prec: [1, 1, 1, 0, 0]
+The edges are[[1, 2], [3, 4]]
+Number of vertices:4
+1:[2]
+2:[1]
+3:[4]
+4:[3]
+Prec:[1, 1, 0, 0]
 Graph is disconnected
-Finding spanning trees for each connected component...
-Number of connected components: 2
-Spanning tree of component starting at vertex 1: [[1, 2], [1, 3]]
-Spanning tree of component starting at vertex 4: [[4, 5]]
 ```
 
 ### PNG files
@@ -276,24 +272,32 @@ Spanning tree of component starting at vertex 4: [[4, 5]]
 | File | Contents |
 |------|---------|
 | `Original Graph.png` | Spring-layout visualization of all input edges |
-| `Tree from vertex (N).png` | Spanning tree of the component whose DFS started at vertex N (one file per component) |
+| ` Tree from vertex (1).png` | DFS spanning tree rooted at vertex 1 (only produced when the graph is connected) |
 
 Node labels are drawn inside light-blue circles; edges are rendered in gray.
 
 ---
 
-## Example Walkthroughs
+## Example Walkthrough
 
-### Connected Graph
+Using the default `data.txt`:
 
-Using `data.txt`:
 ```
 1 2
 1 3
 2 4
 ```
 
-**DFS trace from vertex 1:**
+**Step 1 — Build adjacency list:**
+
+```
+1 → [2, 3]
+2 → [1, 4]
+3 → [1]
+4 → [2]
+```
+
+**Step 2 — Run DFS from vertex 1:**
 
 | Step | Current | Action | `prec` (indices 1–4) |
 |------|---------|--------|----------------------|
@@ -306,33 +310,21 @@ Using `data.txt`:
 | 6 | 3 | No unvisited neighbors → backtrack to 1 | [1, 1, 1, 2] |
 | 7 | 1 | No unvisited neighbors, at start → stop | [1, 1, 1, 2] |
 
-`prec = [1, 1, 1, 2]` — no zeros → **connected**. Spanning tree: `[[1,2], [1,3], [2,4]]`.
+**Step 3 — Check connectivity:**
 
-**DFS trace from vertex 3** (same graph, different root):
+`prec = [1, 1, 1, 2]` — no zeros → **graph is connected**.
 
-`prec = [3, 1, 3, 2]` — root is 3, vertex 1's parent is 3, vertex 4's parent is 2. The tree edges `[[1,3], [1,2], [2,4]]` represent the same edges but a different conceptual rooting.
+**Step 4 — Extract spanning tree edges:**
 
-### Disconnected Graph
+| Vertex `v` | `prec[v]` | Edge |
+|-----------|-----------|------|
+| 2 | 1 | (1, 2) |
+| 3 | 1 | (1, 3) |
+| 4 | 2 | (2, 4) |
 
-Using `data.txt`:
-```
-1 2
-1 3
-4 5
-```
+Spanning tree: `[[1, 2], [1, 3], [2, 4]]`
 
-**DFS from vertex 1:** visits {1, 2, 3}. `prec = [1, 1, 1, 0, 0]`.
-
-Zeros detected → **disconnected**. `spanning_forest` continues from vertex 4 (first unvisited): visits {4, 5}.
-
-Full `prec_forest = [1, 1, 1, 4, 4]`. Component roots (where `prec[v]==v`): vertices **1** and **4**.
-
-| Component root | Spanning tree |
-|---------------|---------------|
-| 1 | `[[1,2], [1,3]]` |
-| 4 | `[[4,5]]` |
-
-Two PNG files are produced, one per component.
+For this particular input the spanning tree equals the original graph because the input is already a tree (3 edges, 4 vertices, connected).
 
 ---
 
@@ -340,9 +332,9 @@ Two PNG files are produced, one per component.
 
 | Limitation | Potential Improvement |
 |------------|----------------------|
+| DFS always starts from vertex `1` (hardcoded) | Prompt the user to enter any starting vertex; different choices produce different spanning trees (see [How the Starting Vertex Affects the Tree](#how-the-starting-vertex-affects-the-tree)) |
+| Disconnected graphs are only reported, not analyzed further | Build a spanning forest by running DFS from one unvisited vertex per component and visualize each component's tree separately (see [Spanning Forests in Disconnected Graphs](#spanning-forests-in-disconnected-graphs)) |
 | No error handling for malformed `data.txt` | Add input validation with informative error messages |
-| Vertices must be labeled 1 to V consecutively | Support arbitrary integer vertex labels |
 | Only undirected graphs are supported | Extend to directed graphs (digraphs) |
 | Graph must be described in a plain-text file | Add support for interactive input or standard input (`stdin`) |
 | Minor typo in `adjacet_matrix` function name (`adjacet` instead of `adjacency`) | Rename to `adjacency_list` in a future refactor |
-
